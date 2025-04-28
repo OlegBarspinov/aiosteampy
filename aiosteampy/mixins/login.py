@@ -166,16 +166,34 @@ class LoginMixin(SteamGuardMixin):
                 httponly=True,
             )
 
-    async def is_session_alive(self, domain=STEAM_URL.COMMUNITY) -> bool:
+    # async def is_session_alive(self, domain=STEAM_URL.COMMUNITY / "my") -> bool:
+    #     """Check if session is alive for `Steam` domain"""
+    #
+    #     # we can also check https://steamcommunity.com/my for redirect to profile page as indicator
+    #     # https://github.com/DoctorMcKay/node-steamcommunity/blob/1067d4572ee9d467e8f686951901c51028c5c995/index.js#L290
+    #
+    #     # ensure that redirects is allowed and access token can be refreshed
+    #     r = await self.session.get(domain, allow_redirects=True)
+    #     rt = await r.text()
+    #     return self.username in rt
+
+    async def is_session_alive(self, domain=STEAM_URL.COMMUNITY / "my", attempts=0) -> bool:
         """Check if session is alive for `Steam` domain"""
 
-        # we can also check https://steamcommunity.com/my for redirect to profile page as indicator
-        # https://github.com/DoctorMcKay/node-steamcommunity/blob/1067d4572ee9d467e8f686951901c51028c5c995/index.js#L290
+        if attempts > 2:
+            return False
 
-        # ensure that redirects is allowed and access token can be refreshed
         r = await self.session.get(domain, allow_redirects=True)
+
         rt = await r.text()
-        return self.username in rt
+        is_session_alive = self.username.lower() in rt
+        if not is_session_alive:
+            print(r.status)
+            with open(f'data/{self.username}.html', 'w', encoding='UTF-8') as f:
+                f.write(rt)
+            return await self.is_session_alive(domain=domain, attempts=attempts + 1)
+        else:
+            return is_session_alive
 
     async def login(self, init_session=True):
         """
@@ -265,7 +283,7 @@ class LoginMixin(SteamGuardMixin):
         r = await self.session.post(
             STEAM_URL.API.IAuthService.BeginAuthSessionViaCredentials,
             data=data,
-            headers=REFERER_HEADER,
+            headers={"Referer": f'{str(STEAM_URL.COMMUNITY)}/login/home/?goto=', 'Origin': str(STEAM_URL.COMMUNITY)},
         )
         return await r.json()
 

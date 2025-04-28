@@ -30,12 +30,12 @@ async def restore_from_cookies(cookies: JSONABLE_COOKIE_JAR, client: "SteamClien
 
     update_session_cookies(client.session, cookies)
 
-    if not (await client.is_session_alive()):  # session initiated here
-        await client.login(init_session=False)
-        return False
-    else:
-        return True
-
+    # if not (await client.is_session_alive()):  # session initiated here
+    #     # await client.login(init_session=False)
+    #     return False
+    # else:
+    #     return True
+    return await client.is_session_alive()
 
 # TODO restore from object/dict, dump to object/dict
 

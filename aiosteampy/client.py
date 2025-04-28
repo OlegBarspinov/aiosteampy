@@ -2,6 +2,7 @@ from re import search as re_search
 from json import loads
 from typing import AsyncIterator, overload, Callable, final, TYPE_CHECKING
 
+from decimal import Decimal
 from aiohttp import ClientSession
 from aiohttp.client import _RequestContextManager
 
@@ -289,18 +290,26 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
 
         return info
 
-    async def get_wallet_balance(self) -> int:
-        """
-        Fetch wallet info from inventory page, parse and return balance.
+    # async def get_wallet_balance(self) -> int:
+    #     """
+    #     Fetch wallet info from inventory page, parse and return balance.
+    #
+    #     .. note:: May reset new items notifications count.
+    #
+    #     :return: wallet balance as integer
+    #     :raises EResultError: for ordinary reasons
+    #     """
+    #
+    #     info = await self.get_wallet_info()
+    #     return int(info["wallet_balance"])
 
-        .. note:: May reset new items notifications count.
-
-        :return: wallet balance as integer
-        :raises EResultError: for ordinary reasons
-        """
-
+    async def get_wallet_balance(self, convert_to_decimal: bool = True) -> dict:
         info = await self.get_wallet_info()
-        return int(info["wallet_balance"])
+        if convert_to_decimal:
+            return {"wallet_balance": Decimal(info['wallet_balance']) / 100,
+                    "wallet_delayed_balance": Decimal(info['wallet_delayed_balance']) / 100}
+
+        return info
 
     async def get_fund_wallet_info(self) -> FundWalletInfo:
         """

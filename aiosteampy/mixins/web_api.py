@@ -1,6 +1,7 @@
 from re import compile
 from typing import overload, Literal
 
+from loguru import logger
 from yarl import URL
 from aiohttp import ClientResponseError
 
@@ -103,6 +104,10 @@ class SteamWebApiMixin(ConfirmationMixin):
                     raise SessionExpired from e
                 else:
                     raise SteamError(f"{'Steam Web API key' if use_api_key else 'Access token'} is invalid") from e
+            # elif e.status == 429:
+            #     raise SteamError(f"{'Steam Web API key' if use_api_key else 'Access token'} is invalid") from e
+                # logger.info(f'{e.status}: {e.message}')
+                # return
             else:
                 raise e
 

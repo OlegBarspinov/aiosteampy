@@ -2,6 +2,7 @@ from typing import overload, Literal, TypeAlias, Sequence, AsyncIterator
 from datetime import datetime
 from json import dumps as jdumps
 
+from aiohttp import ClientResponseError
 from yarl import URL
 
 from ..typed import TradeOffersSummary
@@ -462,6 +463,13 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
         # TODO TypedDict
         return await r.json()
 
+    async def cancel_or_decline_trade_offer(self, obj: int | TradeOffer, *, payload: T_PAYLOAD = {}, headers: T_HEADERS = {}):
+        if isinstance(obj, TradeOffer):
+            if obj.is_our_offer:
+                await self.cancel_trade_offer(obj=obj, payload=payload, headers=headers)
+            else:
+                await self.decline_trade_offer(obj=obj, payload=payload, headers=headers)
+
     async def cancel_trade_offer(self, obj: int | TradeOffer, *, payload: T_PAYLOAD = {}, headers: T_HEADERS = {}):
         """
         Cancel outgoing trade offer.
@@ -558,7 +566,8 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
 
         if isinstance(obj, TradeOffer):
             if obj.is_our_offer:
-                raise TypeError("You can't accept your offer! Are you trying to cancel outgoing offer?")
+                # raise TypeError("You can't accept your offer! Are you trying to cancel outgoing offer?")
+                await self.confirm_trade_offer(obj)
             offer_id = obj.id
             partner = obj.partner_id64
         else:  # int
@@ -578,10 +587,14 @@ class TradeMixin(SteamWebApiMixin, SteamCommunityPublicMixin):
             **payload,
         }
         url_base = STEAM_URL.TRADE / str(offer_id)
-        r = await self.session.post(url_base / "accept", data=data, headers={"Referer": str(url_base), **headers})
-        rj: dict = await r.json()
-        if rj.get("needs_mobile_confirmation") and confirm:
-            await self.confirm_trade_offer(offer_id)
+        try:
+            r = await self.session.post(url_base / "accept", data=data, headers={"Referer": str(url_base), **headers})
+            rj: dict = await r.json()
+            if rj.get("needs_mobile_confirmation") and confirm:
+                await self.confirm_trade_offer(offer_id)
+        except ClientResponseError:
+            pass
+
 
     @overload
     async def make_trade_offer(

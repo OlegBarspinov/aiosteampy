@@ -43,7 +43,7 @@ CREDENTIALS = {
 GAME = (int(os.getenv("TEST_GAME_APP_ID", 730)), int(os.getenv("TEST_GAME_CONTEXT_ID", 2)))  # def CSGO
 ASSET_ID = int(os.getenv("TEST_ASSET_ID", 0))
 
-UA = "Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36"
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/113.0.1774.57"
 
 # https://docs.pytest.org/en/latest/example/simple.html#incremental-testing-test-steps
 _test_failed_incremental: dict[str, dict[tuple[int, ...], str]] = {}
