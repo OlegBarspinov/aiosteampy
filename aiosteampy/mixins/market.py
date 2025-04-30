@@ -861,12 +861,13 @@ class MarketMixin(ConfirmationMixin, SteamCommunityPublicMixin):
         data = {
             "sessionid": self.session_id,
             "currency": self.currency.value,
-            "subtotal": price,
+            "subtotal": price - fee,
             "fee": fee,
-            "total": price + fee,
-            "quantity": 1,
+            "total": price,
+            "quantity": "1",
             **payload,
         }
+
         headers = {"Referer": str(STEAM_URL.MARKET / f"listings/{app.value}/{market_hash_name}"), **headers}
         r = await self.session.post(
             STEAM_URL.MARKET / f"buylisting/{listing_id}",
