@@ -188,9 +188,9 @@ class LoginMixin(SteamGuardMixin):
         rt = await r.text()
         is_session_alive = self.username.lower() in rt
         if not is_session_alive:
-            print(r.status)
-            with open(f'data/{self.username}.html', 'w', encoding='UTF-8') as f:
-                f.write(rt)
+            # print(r.status)
+            # with open(f'data/{self.username}.html', 'w', encoding='UTF-8') as f:
+            #     f.write(rt)
             return await self.is_session_alive(domain=domain, attempts=attempts + 1)
         else:
             return is_session_alive
