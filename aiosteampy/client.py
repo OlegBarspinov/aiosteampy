@@ -455,6 +455,7 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
         params: T_PARAMS = {},
         headers: T_HEADERS = {},
         _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+        inventory = None,
         **item_attrs,
     ) -> EconItem | None:
         """
@@ -479,6 +480,7 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
                 params=params,
                 headers=headers,
                 _item_descriptions_map=_item_descriptions_map,
+                inventory=inventory
                 **item_attrs,
             )
         except SteamError as e:

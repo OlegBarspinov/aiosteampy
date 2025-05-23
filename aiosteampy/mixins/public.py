@@ -295,6 +295,7 @@ class SteamCommunityPublicMixin(SteamHTTPTransportMixin):
         params: T_PARAMS = {},
         headers: T_HEADERS = {},
         _item_descriptions_map: T_SHARED_DESCRIPTIONS = None,
+        inventory = None,
         **item_attrs,
     ) -> EconItem | None:
         """
