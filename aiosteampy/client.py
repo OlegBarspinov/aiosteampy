@@ -271,6 +271,8 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
         ):
             await self.edit_privacy_settings(inventory=3, inventory_gifts=True, profile=3)
 
+        return wallet_info
+
     async def get_wallet_info(self) -> WalletInfo:
         """
         Fetch wallet info from inventory page.
@@ -290,7 +292,7 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
 
         return info
 
-    async def get_wallet_balance(self, convert_to_decimal: bool = False) -> tuple:
+    async def get_wallet_balance(self, convert_to_decimal: bool = False, wallet_info: dict | None = None) -> tuple:
         """
         Fetch wallet info from inventory page, parse and return tuple of balance and delayed_balance.
 
@@ -300,7 +302,7 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
         :return: wallet balance as integer
         :raises EResultError: for ordinary reasons
         """
-        info = await self.get_wallet_info()
+        info = wallet_info or await self.get_wallet_info()
         if convert_to_decimal:
             return Decimal(info['wallet_balance']), Decimal(info['wallet_delayed_balance'])
 
