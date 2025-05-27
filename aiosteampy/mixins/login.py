@@ -175,7 +175,8 @@ class LoginMixin(SteamGuardMixin):
         # ensure that redirects is allowed and access token can be refreshed
         r = await self.session.get(domain, allow_redirects=True)
         rt = await r.text()
-        return self.username in rt
+        is_session_alive = self.username.lower() in rt
+        return is_session_alive
 
     async def login(self, init_session=True):
         """
