@@ -2,6 +2,7 @@ from re import search as re_search
 from json import loads
 from typing import AsyncIterator, overload, Callable, final, TYPE_CHECKING
 
+from decimal import Decimal
 from aiohttp import ClientSession
 from aiohttp.client import _RequestContextManager
 
@@ -289,18 +290,21 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
 
         return info
 
-    async def get_wallet_balance(self) -> int:
+    async def get_wallet_balance(self, convert_to_decimal: bool = False) -> tuple:
         """
-        Fetch wallet info from inventory page, parse and return balance.
+        Fetch wallet info from inventory page, parse and return tuple of balance and delayed_balance.
 
         .. note:: May reset new items notifications count.
 
+        :param convert_to_decimal:
         :return: wallet balance as integer
         :raises EResultError: for ordinary reasons
         """
-
         info = await self.get_wallet_info()
-        return int(info["wallet_balance"])
+        if convert_to_decimal:
+            return Decimal(info['wallet_balance']), Decimal(info['wallet_delayed_balance'])
+
+        return int(info['wallet_balance']), int(info['wallet_delayed_balance'])
 
     async def get_fund_wallet_info(self) -> FundWalletInfo:
         """
