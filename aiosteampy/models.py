@@ -15,7 +15,7 @@ from .constants import (
     MarketListingStatus,
     TradeOfferStatus,
 )
-from .utils import create_ident_code, account_id_to_steam_id, make_inspect_url
+from .utils import create_ident_code, account_id_to_steam_id, make_inspect_url, stable_hash
 
 
 class ItemAction(NamedTuple):
@@ -118,7 +118,7 @@ class ItemDescription:
         return False
 
     def __hash__(self):
-        return hash(self.id)
+        return stable_hash(self.id)
 
 
 @dataclass(eq=False, slots=True, kw_only=True)
@@ -171,7 +171,7 @@ class EconItem:
         return False
 
     def __hash__(self):
-        return hash(self.id)
+        return stable_hash(self.id)
 
 
 # https://github.com/DoctorMcKay/node-steamcommunity/wiki/CConfirmation
@@ -238,7 +238,7 @@ class BaseOrder:
     price: int
 
     def __hash__(self):
-        return self.id
+        return stable_hash(self.id)
 
 
 @dataclass(eq=False, slots=True)
