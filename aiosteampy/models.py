@@ -338,6 +338,21 @@ class MarketHistoryEvent:
     type: MarketHistoryEventType
 
 
+    @property
+    def price(self) -> int:
+        if self.type == MarketHistoryEventType.LISTING_PURCHASED:
+            return self.listing.paid_amount + self.listing.paid_fee
+        elif self.type == MarketHistoryEventType.LISTING_SOLD:
+            return self.listing.received_amount
+
+    @property
+    def currency(self) -> Currency:
+        if self.type == MarketHistoryEventType.LISTING_PURCHASED:
+            return self.listing.currency
+        elif self.type == MarketHistoryEventType.LISTING_SOLD:
+            return self.listing.received_currency
+
+
 @dataclass(eq=False, slots=True)
 class PriceHistoryEntry:
     date: datetime
