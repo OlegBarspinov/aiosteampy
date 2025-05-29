@@ -257,23 +257,28 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
             await self.get_trade_token()
             not self.trade_token and await self.register_new_trade_url()
 
+        await self.trade_acknowledge()
+
         if (not self.currency or not self.country) or force:
             wallet_info = await self.get_wallet_info()
             self.country = wallet_info["wallet_country"]
             self.currency = Currency(wallet_info["wallet_currency"])
 
-        # avoid unnecessary privacy editing
+            return wallet_info
+
+
+    async def edit_profile_settings(self) -> WalletInfo:
+
         profile_data = await self.get_profile_data()
         if (
-            profile_data["Privacy"]["PrivacySettings"]["PrivacyInventory"] != 3
-            or profile_data["Privacy"]["PrivacySettings"]["PrivacyInventoryGifts"] != 3
-            or profile_data["Privacy"]["PrivacySettings"]["PrivacyProfile"] != 3
+                profile_data["Privacy"]["PrivacySettings"]["PrivacyInventory"] != 3
+                or profile_data["Privacy"]["PrivacySettings"]["PrivacyInventoryGifts"] != 3
+                or profile_data["Privacy"]["PrivacySettings"]["PrivacyProfile"] != 3
         ):
             await self.edit_privacy_settings(inventory=3, inventory_gifts=True, profile=3)
 
         await self.trade_acknowledge()
 
-        return wallet_info
 
     async def get_wallet_info(self) -> WalletInfo:
         """
