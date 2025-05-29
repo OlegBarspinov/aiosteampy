@@ -248,7 +248,6 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
             If not passed, api key will not be fetched and registered.
         :param force: force to reload all data even if it presented on client
         """
-
         if (not self._api_key or force) and api_key_domain:
             await self.get_api_key()
             not self._api_key and await self.register_new_api_key(api_key_domain)
@@ -262,16 +261,19 @@ class SteamClientBase(SteamPublicClientBase, ProfileMixin, MarketMixin, TradeMix
             self.country = wallet_info["wallet_country"]
             self.currency = Currency(wallet_info["wallet_currency"])
 
-        # avoid unnecessary privacy editing
+            return wallet_info
+
+
+    async def edit_profile_settings(self) -> WalletInfo:
+
         profile_data = await self.get_profile_data()
         if (
-            profile_data["Privacy"]["PrivacySettings"]["PrivacyInventory"] != 3
-            or profile_data["Privacy"]["PrivacySettings"]["PrivacyInventoryGifts"] != 3
-            or profile_data["Privacy"]["PrivacySettings"]["PrivacyProfile"] != 3
+                profile_data["Privacy"]["PrivacySettings"]["PrivacyInventory"] != 3
+                or profile_data["Privacy"]["PrivacySettings"]["PrivacyInventoryGifts"] != 3
+                or profile_data["Privacy"]["PrivacySettings"]["PrivacyProfile"] != 3
         ):
             await self.edit_privacy_settings(inventory=3, inventory_gifts=True, profile=3)
 
-        return wallet_info
 
     async def get_wallet_info(self) -> WalletInfo:
         """
