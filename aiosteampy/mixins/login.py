@@ -308,7 +308,6 @@ class LoginMixin(SteamGuardMixin):
 
         )
         rj = await r.json()
-        print(rj)
         if rj.get("response", {"had_remote_interaction": True})["had_remote_interaction"]:
             raise LoginError("Error polling auth session status", rj)
 
