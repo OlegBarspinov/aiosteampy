@@ -272,7 +272,7 @@ class LoginMixin(SteamGuardMixin):
         r = await self.session.post(
             STEAM_URL.API.IAuthService.BeginAuthSessionViaCredentials,
             data=data,
-            headers={"Referer": f'{str(STEAM_URL.COMMUNITY)}/login/home/?goto=', 'Origin': str(STEAM_URL.COMMUNITY)},
+            headers=REFERER_HEADER,
         )
         return await r.json()
 
@@ -304,9 +304,11 @@ class LoginMixin(SteamGuardMixin):
         r = await self.session.post(
             STEAM_URL.API.IAuthService.PollAuthSessionStatus,
             data={"client_id": client_id, "request_id": request_id},
-            headers=REFERER_HEADER,
+            headers={"Referer": f'{str(STEAM_URL.COMMUNITY)}/login/home/?goto=', 'Origin': str(STEAM_URL.COMMUNITY)}
+
         )
         rj = await r.json()
+        print(rj)
         if rj.get("response", {"had_remote_interaction": True})["had_remote_interaction"]:
             raise LoginError("Error polling auth session status", rj)
 
