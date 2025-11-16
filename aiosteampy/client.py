@@ -18,7 +18,7 @@ from .mixins.trade import TradeMixin
 from .mixins.market import MarketMixin
 
 
-DEF_COUNTRY = "UA"
+DEF_COUNTRY = "RU"
 DEF_TZ_OFFSET = "10800,0"
 
 
