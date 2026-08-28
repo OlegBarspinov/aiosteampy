@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from collections.abc import AsyncGenerator, Awaitable
 from contextlib import suppress
@@ -48,6 +49,9 @@ from .utils import buyer_pays_to_receive, calc_market_listing_fee
 
 PRICE_ENTRY_TIME_FORMAT = "%b %d %Y %H: %z"
 TRADE_ELIGIBILITY_COOKIE = "webTradeEligibility"
+
+
+log = logging.getLogger(__name__)
 
 
 class MarketComponent(MarketPublicComponent):
@@ -823,6 +827,20 @@ class MarketComponent(MarketPublicComponent):
     ):
         for l_id, l_data in data["listings"].items():  # sell listings
             if l_id not in listings_map:
+                item_key = create_ident_code(
+                    l_data["asset"]["id"],
+                    l_data["asset"]["contextid"],
+                    l_data["asset"]["appid"],
+                )
+                # asset may be absent from this page's assets section (other App items deep in history)
+                if (item := econ_item_map.get(item_key)) is None:
+                    log.warning(
+                        "Skipping market history listing %s: asset %r is missing from page assets",
+                        l_id,
+                        item_key,
+                    )
+                    continue
+
                 listings_map[l_id] = MarketHistoryListing(
                     id=int(l_data["listingid"]),
                     values=ListingValues(
@@ -832,19 +850,27 @@ class MarketComponent(MarketPublicComponent):
                         steam_fee=0,
                         publisher_fee=0,
                     ),
-                    item=econ_item_map[
-                        create_ident_code(
-                            l_data["asset"]["id"],
-                            l_data["asset"]["contextid"],
-                            l_data["asset"]["appid"],
-                        )
-                    ],
+                    item=item,
                     original_price=int(l_data["original_price"]),
                     cancel_reason=l_data.get("cancel_reason"),
                 )
 
         for p_id, p_data in data["purchases"].items():  # purchases :)
             if p_id not in listings_map:
+                item_key = create_ident_code(
+                    p_data["asset"]["id"],
+                    p_data["asset"]["contextid"],
+                    p_data["asset"]["appid"],
+                )
+                # asset may be absent from this page's assets section (other App items deep in history)
+                if (item := econ_item_map.get(item_key)) is None:
+                    log.warning(
+                        "Skipping market history purchase %s: asset %r is missing from page assets",
+                        p_id,
+                        item_key,
+                    )
+                    continue
+
                 listing = MarketHistoryListing(
                     id=int(p_data["listingid"]),
                     values=ListingValues(
@@ -858,13 +884,7 @@ class MarketComponent(MarketPublicComponent):
                     paid_amount=int(p_data["paid_amount"]),
                     paid_fee=int(p_data["paid_fee"]),
                     time_sold=datetime.fromtimestamp(p_data["time_sold"], UTC),
-                    item=econ_item_map[
-                        create_ident_code(
-                            p_data["asset"]["id"],
-                            p_data["asset"]["contextid"],
-                            p_data["asset"]["appid"],
-                        )
-                    ],
+                    item=item,
                     purchase_id=int(p_data["purchaseid"]),
                     steamid_purchaser=int(p_data["steamid_purchaser"]),
                     received_amount=int(p_data["received_amount"]),
@@ -885,9 +905,18 @@ class MarketComponent(MarketPublicComponent):
             if "purchaseid" in e_data:
                 listing_key += "_" + e_data["purchaseid"]
 
+            listing = listings_map.get(listing_key)
+            if listing is None:
+                # its listing/purchase was skipped (missing asset data on this page)
+                log.warning(
+                    "Skipping market history event: listing %r is missing from page listings",
+                    listing_key,
+                )
+                continue
+
             events.append(
                 MarketHistoryEvent(
-                    listing=listings_map[listing_key],
+                    listing=listing,
                     time=datetime.fromtimestamp(e_data["time_event"], UTC),
                     type=MarketHistoryEventType(e_data["event_type"]),
                 )
@@ -940,6 +969,7 @@ class MarketComponent(MarketPublicComponent):
 
         self._parse_descriptions_from_my_listings_or_market_history(rj, _item_descriptions_map)
         self._parse_assets_for_history_listings(rj["assets"], _item_descriptions_map, _market_history_econ_items_map)
+
         self._parse_history_listings(rj, _market_history_econ_items_map, _market_history_listings_map)
 
         events = self._parse_history_events(rj, _market_history_listings_map)
